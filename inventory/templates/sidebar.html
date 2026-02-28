@@ -1,0 +1,52 @@
+{% load static %}
+<aside class="shop_sidebar bg-light border-end vh-100" style="width: 250px;">
+  <nav class="shop_nav-menu p-3">
+    <ul class="nav flex-column gap-2">
+      <li class="nav-item">
+        <a href="/" class="nav-link d-flex align-items-center gap-3 text-dark rounded hover-bg-light">
+          {% comment %} <span class="menu_icon"><i class="fa-solid fa-house"></i></span> {% endcomment %}
+          <span class="menu_text">Dashboard</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <div class="dropdown">
+          <button class="nav-link d-flex align-items-center justify-content-between gap-3 text-dark w-100 border-0 bg-transparent text-start" type="button" data-bs-toggle="collapse" data-bs-target="#ticketsSubmenu">
+            <span class="d-flex align-items-center gap-3">
+              {% comment %} <i class="fa-solid fa-ticket"></i> {% endcomment %}
+              <span>Tickets</span>
+            </span>
+            {% comment %} <i class="fa-solid fa-chevron-down small"></i> {% endcomment %}
+          </button>
+          <div class="collapse ps-4" id="ticketsSubmenu">
+            <ul class="nav flex-column">
+              <li>
+                <a href="#" class="nav-link text-muted small">Printing</a>
+              </li>
+              <li>
+                <a href="#" class="nav-link text-muted small">Repair</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'inventory_list' %}" class="nav-link d-flex align-items-center gap-3 text-dark rounded active bg-primary text-white">
+          {% comment %} <span class="menu_icon"><i class="fa-solid fa-boxes-packing"></i></span> {% endcomment %}
+          <span class="menu_text">Inventory</span>
+        </a>
+      </li>
+
+      <li class="nav-item mt-auto pt-4 border-top">
+        <form method="POST" action="/logout/" id="logout-form" onsubmit="return confirmLogout(event)">
+          {% csrf_token %}
+          <button type="submit" class="nav-link d-flex align-items-center gap-3 text-danger border-0 bg-transparent w-100 text-start">
+            {% comment %} <span class="menu_icon"><i class="fa-solid fa-right-from-bracket"></i></span> {% endcomment %}
+            <span class="menu_text">Logout</span>
+          </button>
+        </form>
+      </li>
+    </ul>
+  </nav>
+</aside>
