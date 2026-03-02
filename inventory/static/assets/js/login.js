@@ -3,43 +3,40 @@
 */
 
 // 1. Handle Form Submission UI
-document.getElementById("loginForm").onsubmit =
-  function () {
-    const btn = document.getElementById("loginBtn");
-    const txt = document.getElementById("btnText");
+document.getElementById('loginForm').onsubmit = function () {
+  const btn = document.getElementById('loginBtn');
+  const txt = document.getElementById('btnText');
 
-    btn.disabled = true;
-    txt.innerHTML =
-      '<i class="fas fa-spinner fa-spin me-2"></i> Verifying...';
-  };
+  btn.disabled = true;
+  txt.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Verifying...';
+};
 
 // 2. Handle Status Alerts
 (function () {
-  const errorStatus =
-    document.body.getAttribute("data-error");
+  const errorStatus = document.body.getAttribute('data-error');
 
   // SUCCESS: Redirect to home
-  if (errorStatus === "no") {
-    window.location.href = "/inventory/";
+  if (errorStatus === 'no') {
+    window.location.href = '/dashboard/';
   }
   // ERROR: Show SweetAlert for incorrect credentials
-  else if (errorStatus === "yes") {
+  else if (errorStatus === 'yes') {
     // Check if swal actually exists before calling it
-    if (typeof swal !== "undefined") {
+    if (typeof swal !== 'undefined') {
       swal({
-        title: "Access Denied",
-        text: "Incorrect Email or Password.",
-        icon: "error",
+        title: 'Access Denied',
+        text: 'Incorrect Email or Password.',
+        icon: 'error',
         buttons: {
           confirm: {
-            text: "Try Again",
-            className: "btn btn-primary",
+            text: 'Try Again',
+            className: 'btn btn-primary',
           },
         },
       });
     } else {
       // Fallback if the plugin didn't load
-      alert("Access Denied: Incorrect Email or Password.");
+      alert('Access Denied: Incorrect Email or Password.');
     }
   }
 })();

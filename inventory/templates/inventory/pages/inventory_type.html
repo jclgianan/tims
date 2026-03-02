@@ -1,0 +1,252 @@
+{% extends "template.html" %}
+{% block content %}
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="fa fa-check-circle me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+<div class="container-fluid vh-content p-0">
+    <div class="row g-0 h-100">
+        <div class="col-md-3 border-end bg-light d-flex flex-column h-100 p-0">
+            <div class="p-2 border-bottom bg-white">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" id="typeSearch" class="form-control border-start-0" placeholder="Search types...">
+                    <a href="{% url 'inventory_type' %}" class="btn btn-outline-secondary">+</a>
+                </div>
+            </div>
+            
+            <div class="list-group list-group-flush overflow-auto flex-grow-1" id="typeList" style="max-height: calc(100vh - 60px);">
+                {% for t in all_types %}
+                <a href="{% url 'inventory_type_edit' t.id %}" 
+                class="list-group-item list-group-item-action py-2 px-3 border-0 small 
+                {% if selected_type.id == t.id %}bg-info text-white{% endif %}">
+                    <i class="fas {{ t.icon|default:'fa-cube' }} me-2 {% if selected_type.id == t.id %}text-white{% else %}text-muted{% endif %}"></i>
+                    <span>{{ t.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-9 d-flex flex-column h-100 p-0">
+            <div class="p-2 border-bottom d-flex justify-content-between align-items-center bg-white">
+                <button type="submit" form="inventoryTypeForm" class="btn btn-info btn-sm text-white px-3 fw-bold">
+                    <i class="fas fa-save me-1"></i> Save
+                </button>
+            </div>
+
+            <div class="flex-grow-1 overflow-auto p-3 bg-white">
+                <form method="POST" id="inventoryTypeForm" action="" class="mx-auto" style="max-width: 900px;">
+                    {% csrf_token %}
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label x-small fw-bold text-uppercase text-muted mb-1">Name *</label>
+                            <input type="text" name="name" class="form-control form-control-sm" value="{{ selected_type.name|default:'' }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label x-small fw-bold text-uppercase text-muted mb-1">Short name</label>
+                            <input type="text" name="short_name" class="form-control form-control-sm" value="{{ selected_type.short_name|default:'' }}"></div>
+                        <div class="col-md-4">
+                            <label class="form-label x-small fw-bold text-uppercase text-muted mb-1">Icon</label>
+                            <select name="icon" class="form-select form-select-sm">
+                                {% for value, label in icon_choices %}
+                                    <option value="{{ value }}" {% if selected_type.icon == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center border-bottom mb-1 pb-1">
+                            <span class="small fw-bold text-secondary">Properties</span>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none x-small" onclick="addProperty()">+ Add Property</button>
+                        </div>
+                        <div class="table-responsive" style="max-height: 200px;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="propertyTable">
+                                <thead class="table-light sticky-top">
+                                    <tr class="x-small text-muted">
+                                        <th style="width: 35%;">Label</th>
+                                        <th style="width: 35%;">Default</th>
+                                        <th class="text-center">Name</th>
+                                        <th class="text-center">Req.</th>
+                                        <th class="text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="propertyBody" class="small">
+                                    {% if selected_type %}
+                                        {% for prop in selected_type.properties.all %}
+                                            <tr>
+                                                <td><input type="text" name="prop_label[]" class="form-control form-control-sm" value="{{ prop.label }}" required></td>
+                                                <td><input type="text" name="prop_default[]" class="form-control form-control-sm" value="{{ prop.default_value|default:'' }}"></td>
+                                                
+                                                <td class="text-center">
+                                                    <input type="checkbox" name="prop_has_name_{{ forloop.index0 }}" class="form-check-input" {% if prop.has_name_input %}checked{% endif %}>
+                                                </td>
+                                                <td class="text-center">
+                                                    <input type="checkbox" name="prop_required_{{ forloop.index0 }}" class="form-check-input" {% if prop.is_required %}checked{% endif %}>
+                                                </td>
+                                                
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-link btn-sm text-danger p-0" 
+                                                        onclick="this.closest('tr').remove(); reIndexRows();">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center border-bottom mb-1 pb-1">
+                            <span class="small fw-bold text-secondary">Parts (Components)</span>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none x-small" onclick="addPart()">+ Add Part</button>
+                        </div>
+                        <div class="table-responsive" style="max-height: 180px;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="partTable">
+                                <thead class="table-light sticky-top">
+                                    <tr class="x-small text-muted">
+                                        <th style="width: 60%;">Part Type</th>
+                                        <th class="text-center">Has Name</th>
+                                        <th class="text-center">S/N</th>
+                                        <th class="text-center">Default</th>
+                                        <th class="text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partBody">
+                                    {% for part in selected_type.parts.all %}
+                                    <tr>
+                                        <td>
+                                            <select name="part_id[]" class="form-select form-select-sm">
+                                                {% for t in all_types %}
+                                                    <option value="{{ t.id }}" {% if part.part_type.id == t.id %}selected{% endif %}>{{ t.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="part_has_name_{{ forloop.index0 }}" class="form-check-input" {% if part.has_name %}checked{% endif %}>
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="part_serial_{{ forloop.index0 }}" class="form-check-input" {% if part.is_serial %}checked{% endif %}>
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="part_default_{{ forloop.index0 }}" class="form-check-input" {% if part.is_default %}checked{% endif %}>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-link btn-sm text-danger p-0" 
+                                                    onclick="this.closest('tr').remove(); reIndexRows();">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small { font-size: 0.75rem; }
+    .form-control-sm, .form-select-sm { font-size: 0.85rem; padding: 0.25rem 0.5rem; }
+    .table-sm td { padding: 0.3rem; }
+    #propertyBody .form-check-input, #partBody .form-check-input { margin-top: 0; width: 14px; height: 14px; }
+</style>
+
+<script>
+    // Add this to your <script> block
+    document.getElementById('inventoryTypeForm').addEventListener('submit', function(e) {
+        // Force a final re-indexing so everything is 0, 1, 2... N
+        reIndexRows();
+    });
+
+    // Update reIndexRows to be more aggressive (using jQuery style for reliability)
+    function reIndexRows() {
+        // Re-index Properties
+        $('#propertyBody tr').each(function(index) {
+            $(this).find('input[name^="prop_has_name"]').attr('name', `prop_has_name_${index}`);
+            $(this).find('input[name^="prop_required"]').attr('name', `prop_required_${index}`);
+        });
+
+        // Re-index Parts
+        $('#partBody tr').each(function(index) {
+            $(this).find('input[name^="part_has_name"]').attr('name', `part_has_name_${index}`);
+            $(this).find('input[name^="part_default"]').attr('name', `part_default_${index}`);
+            $(this).find('input[name^="part_serial"]').attr('name', `part_serial_${index}`);
+        });
+    }
+
+    function addProperty() {
+        const tbody = document.getElementById('propertyBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" name="prop_label[]" class="form-control form-control-sm" required></td>
+            <td><input type="text" name="prop_default[]" class="form-control form-control-sm"></td>
+            <td class="text-center"><input type="checkbox" name="prop_has_name_TEMP" class="form-check-input"></td>
+            <td class="text-center"><input type="checkbox" name="prop_required_TEMP" class="form-check-input"></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="this.closest('tr').remove(); reIndexRows();">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        reIndexRows(); // Assign correct numbers immediately
+    }
+
+    function addPart() {
+        const tbody = document.getElementById('partBody');
+        let options = '<option value="">-- Choose Type --</option>';
+        {% if all_types %}
+            {% for t in all_types %}
+                options += '<option value="{{ t.id }}">{{ t.name|escapejs }}</option>';
+            {% endfor %}
+        {% endif %}
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><select name="part_id[]" class="form-select form-select-sm" required>${options}</select></td>
+            <td class="text-center"><input type="checkbox" name="part_has_name_TEMP" class="form-check-input"></td>
+            <td class="text-center"><input type="checkbox" name="part_default_TEMP" class="form-check-input"></td>
+            <td class="text-center"><input type="checkbox" name="part_serial_TEMP" class="form-check-input"></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="this.closest('tr').remove(); reIndexRows();">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        reIndexRows(); // Assign correct numbers immediately
+    }
+    // Update your remove button to use this:
+    // onclick="this.closest('tr').remove(); reIndexRows();"
+
+    document.getElementById('typeSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('#typeList .list-group-item').forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none';
+        });
+    });
+
+    window.onload = () => { 
+    // Do nothing. The user will click "+ Add Property" if they need one.
+};
+</script>
+
+{% endblock %}

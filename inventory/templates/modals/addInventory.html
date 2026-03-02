@@ -30,41 +30,23 @@
               <input type="text" class="form-control" id="device_name" name="device_name" placeholder="e.g., Dell XPS 15" required />
             </div>
             <div class="col-md-6">
-              <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
-              <select class="form-select" id="category" name="category" required>
-                <option value="">Select Category</option>
-                <option value="Computer System">Computer System</option>
-                <option value="Components">Components</option>
-                <option value="Peripherals">Peripherals</option>
-                <option value="Networking">Networking</option>
-                <option value="Cables & Adapters">Cables & Adapters</option>
-                <option value="Others">Others</option>
+              <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
+              <select id="type" name="type" class="form-select">
+                <option value="">-- Select Type --</option>
+                {% for t in all_types %}
+                  <option value="{{ t.id }}">{{ t.name }}</option>
+                {% endfor %}
               </select>
             </div>
           </div>
 
           <hr />
 
-          <h6 class="fw-bold mb-3 text-primary">Specifications (Optional)</h6>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Processor</label>
-              <input type="text" class="form-control" name="processor" placeholder="e.g., Intel i7" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">RAM</label>
-              <input type="text" class="form-control" name="ram" placeholder="e.g., 16GB" />
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Storage</label>
-              <input type="text" class="form-control" name="storage" placeholder="e.g., 512GB SSD" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Graphics Card</label>
-              <input type="text" class="form-control" name="graphics_card" />
-            </div>
+          <hr />
+          <hr />
+          <h6 class="fw-bold mb-3 text-primary">Dynamic Specifications</h6>
+          <div id="dynamic-fields-row" class="row mb-3">
+            <div class="col-12 text-muted px-3">Please select a Type to see specifications.</div>
           </div>
 
           <hr />

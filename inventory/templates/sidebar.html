@@ -3,20 +3,7 @@
   <nav class="shop_nav-menu p-4">
     <ul class="nav flex-column gap-3">
       <li class="nav-item">
-        <a href="{% url 'dashboard' %}"
-          class="nav-link d-flex align-items-center gap-3 p-3 rounded fs-5 {% if request.resolver_match.url_name == 'dashboard' %}
-            
-            
-            bg-primary text-white shadow-sm
-
-
-          {% else %}
-            
-            
-            text-dark hover-bg-light
-
-
-          {% endif %}">
+        <a href="{% url 'dashboard' %}" class="nav-link d-flex align-items-center gap-3 p-3 rounded fs-5 {% if request.resolver_match.url_name == 'dashboard' %} bg-primary text-white shadow-sm {% else %} text-dark hover-bg-light {% endif %}">
           <span class="menu_icon"><i class="fa-solid fa-house"></i></span>
           <span class="menu_text fw-medium">Dashboard</span>
         </a>
@@ -50,6 +37,9 @@
           </li>
           <li>
             <a href="#" class="nav-link p-2 text-dark fs-6 hover-text-primary {% if request.resolver_match.url_name == 'persons_list' %} fw-bold text-primary {% endif %}"><i class="fa-solid fa-users me-2"></i>Persons</a>
+          </li>
+          <li>
+            <a href="{% url 'inventory_type' %}" class="nav-link p-2 text-dark fs-6 hover-text-primary {% if request.resolver_match.url_name == 'inventory_type' %} fw-bold text-primary {% endif %}"><i class="fa-solid fa-tags me-2"></i>Inventory Types</a>
           </li>
         </ul>
       </li>
