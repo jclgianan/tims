@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from inventory import views
 
@@ -24,4 +24,6 @@ urlpatterns = [
     path('', views.inventory_list, name='inventory_list'),
     path('create/', views.inventory_create, name='inventory_create'),
     path('generate-id/', views.generate_inventory_id, name='generate_inventory_id'),
+    
+    path('tickets/', include('tickets.urls')),
 ]
