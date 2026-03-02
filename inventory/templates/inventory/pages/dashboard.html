@@ -1,0 +1,120 @@
+{% extends 'template.html' %} {% load static %} {% block title %}
+  Dashboard
+{% endblock %} {% block content %}
+  <div class="container-fluid py-1">
+    <div class="row">
+      <main class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h1 class="h3">Dashboard</h1>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-print me-2 text-primary"></i> Printing</h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  {% include 'partials/stat_card.html' with label='Pending' value=pending icon='fa-clock' color='warning' url_name='status-card-filter' filter_val='pending' id='printing-pending' %}
+                  {% include 'partials/stat_card.html' with label='Ongoing' value=in_progress icon='fa-spinner' color='info' url_name='status-card-filter' filter_val='in_progress' id='printing-in-progress' %}
+                  {% include 'partials/stat_card.html' with label='Printed' value=printed icon='fa-print' color='success' url_name='status-card-filter' filter_val='printed' id='printing-printed' %}
+                  {% include 'partials/stat_card.html' with label='Released' value=released icon='fa-box-open' color='primary' url_name='status-card-filter' filter_val='released' id='printing-released' %}
+                  {% include 'partials/stat_card.html' with label='Cancelled' value=cancelled icon='fa-ban' color='danger' url_name='status-card-filter' filter_val='cancelled' id='printing-cancelled' %}
+                </div>
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-screwdriver-wrench me-2 text-secondary"></i> Repair</h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  {% include 'partials/stat_card.html' with label='Pending' value=repair_pending icon='fa-clock' color='warning' url_name='status-repair-filter' filter_val='pending' id='repair-pending' %}
+                  {% include 'partials/stat_card.html' with label='Ongoing' value=repair_in_progress icon='fa-spinner' color='info' url_name='status-repair-filter' filter_val='in_progress' id='repair-in-progress' %}
+                  {% include 'partials/stat_card.html' with label='Repaired' value=repair_repaired icon='fa-screwdriver-wrench' color='success' url_name='status-repair-filter' filter_val='repaired' id='repair-repaired' %}
+                  {% include 'partials/stat_card.html' with label='Released' value=repair_released icon='fa-box-open' color='primary' url_name='status-repair-filter' filter_val='released' id='repair-released' %}
+                  {% include 'partials/stat_card.html' with label='Unresolved' value=unresolved icon='fa-ban' color='danger' url_name='status-repair-filter' filter_val='unresolved' id='repair-unresolved' %}
+                </div>
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-boxes-packing me-2"></i> Inventory Graph</h5>
+              </div>
+              <div class="card-body">
+                <div id="apex-column-chart"></div>
+                <div id="apex-pie-chart"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-bolt-lightning me-2 text-warning"></i> Quick Actions</h5>
+              </div>
+              <div class="card-body">
+                <button class="btn btn-outline-primary w-100 mb-2 d-flex justify-content-between align-items-center py-3" data-bs-toggle="modal" data-bs-target="#addPrintingModal">
+                  <span><i class="fa-solid fa-print me-2"></i> Add Print Ticket</span>
+                  <i class="fa-solid fa-circle-plus"></i>
+                </button>
+                <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center py-3" data-bs-toggle="modal" data-bs-target="#addRepairModal">
+                  <span><i class="fa-solid fa-screwdriver-wrench me-2"></i> Add Repair Ticket</span>
+                  <i class="fa-solid fa-circle-plus"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i> Recent Activities</h5>
+              </div>
+              <div class="card-body px-0">
+                <ul class="list-group list-group-flush" id="activities-list">
+                  {% if not recentActivities %}
+                    <li class="list-group-item border-0 text-center text-muted py-4">No recent activities available.</li>
+                  {% else %}
+                    {% for activity in recentActivities %}
+                      <li class="list-group-item border-0 d-flex align-items-start mb-2">
+                        <div class="rounded-circle bg-light p-2 me-3 text-center" style="width: 40px;">
+                          <i class="fa-solid fa-circle-info text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                          <p class="mb-0 small">
+                            <strong>{{ activity.user_name }}</strong> {{ activity.short_description }}
+                          </p>
+                          <small class="text-muted">{{ activity.created_at|timesince }} ago</small>
+                        </div>
+                      </li>
+                    {% endfor %}
+                  {% endif %}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    // Note: In Django, use {% url 'api_name' %} to get endpoints
+    // const statsUrl = "{% url 'api_dashboard_stats' %}"
+    // const activitiesUrl = "{% url 'api_dashboard_activities' %}"
+    
+    function updateDashboardStats() {
+      fetch(statsUrl)
+        .then((res) => res.json())
+        .then((data) => {
+          document.getElementById('printing-pending').textContent = data.printing.pending
+          // ... map the rest of the IDs here
+        })
+    }
+    // Set intervals as per your original logic
+  </script>
+{% endblock %}
