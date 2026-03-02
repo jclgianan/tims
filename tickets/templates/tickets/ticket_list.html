@@ -1,0 +1,70 @@
+{% extends "template.html" %}
+
+{% load static %} 
+
+{% block title %} All Tickets - TIMS {% endblock %}
+
+{% block content %}
+<div class="panel panel-inverse">
+  <div class="panel-heading">
+    <h1 class="panel-title">All Tickets (Printing & Support)</h1>
+  </div>
+  <div class="panel-body">
+    <table id="data-table-tickets" class="table table-striped table-bordered align-middle">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+          <tr>
+            <td>{{ ticket.id }}</td>
+            <td>
+              {% if ticket.printingticket %}
+                <span class="badge bg-blue">Printing Ticket</span>
+              {% elif ticket.supportticket %}
+                <span class="badge bg-orange">Support Ticket</span>
+              {% endif %}
+            </td>
+            <td>{{ ticket.name }}</td>
+            <td>
+                <span class="badge bg-secondary">
+                {% if ticket.printingticket %}
+                   {{ ticket.printingticket.status }}
+                {% elif ticket.supportticket %}
+                   {{ ticket.supportticket.status }}
+                {% endif %}</span>
+            </td>
+            <td>
+                {% if ticket.printingticket %}
+                   Size: {{ ticket.printingticket.width|floatformat:"-g" }}x{{ ticket.printingticket.height|floatformat:"-g" }} ft
+                {% elif ticket.supportticket %}
+                   Device Name: {{ ticket.supportticket.device_name }}
+                {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_js %}
+  <script src="{% static 'assets/plugins/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+  <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
+  <script>
+    $(document).ready(function () {
+      $('#data-table-tickets').DataTable({
+        responsive: true,
+        pageLength: 10,
+        order: [[0, "desc"]] // Show newest ID first
+      });
+    });
+  </script>
+{% endblock %}

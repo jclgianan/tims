@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.views.generic import RedirectView
 from inventory import views
 
@@ -32,4 +32,5 @@ urlpatterns = [
     path("inventory-type/", views.create_inventory_type, name="inventory_type"),
     path('inventory-type/<int:type_id>/', views.create_inventory_type, name='inventory_type_edit'),
     path('get-type-specs', views.get_type_specs, name='get_type_specs'),
+    path('tickets/', include('tickets.urls')),
 ]
