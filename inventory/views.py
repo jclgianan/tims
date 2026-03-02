@@ -3,13 +3,57 @@ from .models import InventoryItem
 from .forms import InventoryForm
 from django.http import JsonResponse
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 
+
+def login_view(request):
+    error_status = ""
+    remembered_email = ""
+
+    if request.method == "POST":
+        login_input = request.POST.get('emailId') # This is what the user typed
+        password = request.POST.get('password')
+        remember_me = request.POST.get('rememberMe')
+
+        # 1. Try to find if the input is an email that belongs to a user
+        try:
+            user_by_email = User.objects.get(email=login_input)
+            username_to_auth = user_by_email.username
+        except User.DoesNotExist:
+            # If no email matches, assume they typed their username
+            username_to_auth = login_input
+
+        # 2. Authenticate using the username field
+        user = authenticate(request, username=username_to_auth, password=password)
+
+        if user is not None:
+            login(request, user)
+            if not remember_me:
+                request.session.set_expiry(0) 
+            return render(request, 'login.html', {'error': 'no'})
+        else:
+            error_status = "yes"
+            remembered_email = login_input 
+
+    return render(request, 'login.html', {
+        'error': error_status,
+        'remembered_email': remembered_email
+    })
+
+def dashboard(request):
+    return render(request, 'inventory/pages/dashboard.html')
+
+@login_required(login_url='login')
 def inventory_list(request):
 
     items = InventoryItem.objects.all()
     form = InventoryForm()
     return render(request, 'inventory/pages/inventory_list.html', {'items': items, 'form': form})
 
+@login_required(login_url='login')
 def inventory_create(request):
     if request.method == "POST":
         # Get the data from the POST request
@@ -55,6 +99,8 @@ def inventory_create(request):
         messages.success(request, f'Successfully added {qty} device(s) to inventory!')
         
     return redirect('inventory_list')
+
+@login_required(login_url='login')
 def generate_inventory_id(request):
     category = request.GET.get('category')
     
