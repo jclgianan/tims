@@ -6274,3 +6274,10 @@ venv/Scripts/pip3.exe
 venv/Scripts/python.exe
 venv/Scripts/pythonw.exe
 venv/Scripts/sqlformat.exe
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django cache (if using file-based cache)
+.cache

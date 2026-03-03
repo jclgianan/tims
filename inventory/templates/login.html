@@ -1,37 +1,43 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>IMTS | Login</title>
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
-
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+          name="viewport" />
     <link rel="stylesheet" href="{% static 'assets/css/default/app.min.css' %}" />
     <link rel="stylesheet" href="{% static 'assets/css/vendor.min.css' %}" />
-    <link rel="icon" type="image/png" href="{% static 'assets/css/default/images/transparent/PICT.png' %}" />
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'assets/css/default/images/transparent/PICT.png' %}" />
   </head>
-
-  <body class="pace-top" data-error="{{ error }}" data-remembered-email="{{ remembered_email|default:'' }}">
+  <body class="pace-top"
+        data-error="{{ error }}"
+        data-remembered-email="{{ remembered_email|default:'' }}">
     <div class="app-cover"></div>
     <div id="loader" class="app-loader">
       <span class="spinner"></span>
     </div>
-
     <div id="app" class="app">
       <div class="login login-with-news-feed">
         <div class="news-feed">
-          <div class="news-image" style="background-image: url('{% static 'assets/img/login-bg/login-bg-11.jpg' %}')"></div>
+          <div class="news-image"
+               style="background-image: url('{% static 'assets/img/login-bg/login-bg-gray-ai-generated.png' %}')">
+          </div>
           <div class="news-caption">
-            <h4 class="caption-title"><b>Inventory Management and Ticketing System</b></h4>
+            <h4 class="caption-title">
+              <b>Inventory Management and Ticketing System</b>
+            </h4>
           </div>
         </div>
-
         <div class="login-container">
           <div class="login-header mb-30px">
             <div class="brand">
               <div class="d-flex align-items-center">
-                <span><img src="{% static 'assets/img/logo/logo-bs4.png' %}" class="logo" /></span>
+                <span>
+                  <img src="{% static 'assets/img/logo/logo-bs4.png' %}" class="logo" />
+                </span>
                 <b>IMT</b> System
               </div>
               <small>Membership Form</small>
@@ -40,22 +46,37 @@
               <i class="fa fa-sign-in-alt"></i>
             </div>
           </div>
-
           <div class="login-content">
             <form id="loginForm" method="POST" class="fs-13px">
               {% csrf_token %}
               <div class="form-floating mb-15px">
-                <input type="text" class="form-control h-45px fs-13px" placeholder="Email Address" id="emailAddress" name="emailId" value="{{ remembered_email|default:'' }}" required />
-                <label for="emailAddress" class="d-flex align-items-center fs-13px text-gray-300">Email Address</label>
+                <input type="text"
+                       class="form-control h-45px fs-13px"
+                       placeholder="Email Address"
+                       id="emailAddress"
+                       name="emailId"
+                       value="{{ remembered_email|default:'' }}"
+                       required />
+                <label for="emailAddress"
+                       class="d-flex align-items-center fs-13px text-gray-300">Email Address</label>
               </div>
               <div class="form-floating mb-15px">
-                <input type="password" class="form-control h-45px fs-13px" placeholder="Password" id="password" name="password" required />
-                <label for="password" class="d-flex align-items-center fs-13px text-gray-300">Password</label>
+                <input type="password"
+                       class="form-control h-45px fs-13px"
+                       placeholder="Password"
+                       id="password"
+                       name="password"
+                       required />
+                <label for="password"
+                       class="d-flex align-items-center fs-13px text-gray-300">Password</label>
               </div>
-
               <div class="d-flex mb-30px">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="1" id="rememberMe" name="rememberMe" />
+                  <input class="form-check-input"
+                         type="checkbox"
+                         value="1"
+                         id="rememberMe"
+                         name="rememberMe" />
                   <label class="form-check-label text-gray-300" for="rememberMe">Remember Me</label>
                 </div>
                 <div class="ms-auto">
@@ -63,20 +84,27 @@
                 </div>
               </div>
               <div class="mb-15px">
-                <button type="submit" id="loginBtn" class="btn btn-primary d-block h-45px w-100 btn-lg fs-14px"><span id="btnText">Sign me in</span></button>
+                <button type="submit"
+                        id="loginBtn"
+                        class="btn btn-primary d-block h-45px w-100 btn-lg fs-14px">
+                  <span id="btnText">Sign me in</span>
+                </button>
               </div>
               <div class="mb-40px pb-40px text-gray-600">
                 Not a member yet? Click <a href="register" class="text-primary">here</a> to register.
               </div>
               <hr class="bg-gray-600 opacity-2" />
-              <div class="text-gray-500 text-center text-white bg-opacity-70 mb-0">&copy; Provincial Government of Catanduanes | GO - IT Department 2025</div>
+              <div class="text-gray-500 text-center text-white bg-opacity-70 mb-0">
+                &copy; Provincial Government of Catanduanes | GO - IT Department 2025
+              </div>
             </form>
           </div>
         </div>
       </div>
-      <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top" data-toggle="scroll-to-top"><i class="fa fa-angle-up"></i></a>
+      <a href="javascript:;"
+         class="btn btn-icon btn-circle btn-success btn-scroll-to-top"
+         data-toggle="scroll-to-top"><i class="fa fa-angle-up"></i></a>
     </div>
-
     <script src="{% static 'assets/js/vendor.min.js' %}"></script>
     <script src="{% static 'assets/js/app.min.js' %}"></script>
     <script src="{% static 'assets/plugins/sweetalert/dist/sweetalert.min.js' %}"></script>
