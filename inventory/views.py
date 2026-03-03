@@ -249,25 +249,24 @@ def get_type_specs(request):
     type_id = request.GET.get("type_id")
     inv_type = get_object_or_404(InventoryType, id=type_id)
 
-    # 1. Map the Properties (e.g., Processor, RAM)
-    props = [
+    properties = [
         {
-            "label": p.label,
-            "has_name": p.has_name_input,  # Match your model field name
-            "required": p.is_required,
+            "label": prop.label,
+            "has_name": prop.has_name_input,
+            "is_required": prop.is_required,
         }
-        for p in inv_type.properties.all()
+        for prop in inv_type.properties.all()
     ]
 
-    # 2. Map the Parts (e.g., GPU, Storage)
     parts = [
         {
-            "label": pt.part_type.name,
-            # Check if the part itself needs a name/serial based on its own type definition
-            "has_name": True,  # Or pt.part_type.short_name exists
-            "required": pt.is_default,
+            "id": part.part_type.id,
+            "name": part.part_type.name,
+            "has_name": part.has_name,
+            "is_default": part.is_default,
+            "is_serial": part.is_serial,
         }
-        for pt in inv_type.parts.all()
+        for part in inv_type.parts.all()
     ]
 
-    return JsonResponse({"properties": props, "parts": parts})
+    return JsonResponse({"properties": properties, "parts": parts})

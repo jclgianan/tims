@@ -101,40 +101,19 @@
         // 4. Dynamic Input Form for Add Inventory Modal
         $(document).on('change', '#type, #item_type', function () {
             const typeId = $(this).val();
-            const $container = $('#dynamic-fields-row');
+            const $tbody = $('#partBody'); // Target the table body, not the dynamic-fields-row
 
             if (!typeId) {
-                $container.html('<div class="col-12 text-muted small px-3">Select a Type...</div>');
+                $tbody.empty();
                 return;
             }
 
-            $.getJSON(`/get-type-specs/`, { type_id: typeId }, function(data) {
-                $container.empty();
+            // Use $.get instead of $.getJSON because we are receiving HTML
+            $.get("{% url 'get_type_specs' %}", { type_id: typeId }, function(html) {
+                $tbody.html(html); // Inject the rendered <tr> rows directly
                 
-                // Properties (Specs like RAM/Processor)
-                data.properties.forEach(prop => {
-                    let placeholder = prop.has_name ? "Enter Model/Name" : "Enter Specification";
-                    $container.append(`
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small">${prop.label} ${prop.required ? '<span class="text-danger">*</span>' : ''}</label>
-                            <input type="text" name="prop_${prop.label}" class="form-control form-control-sm" 
-                                   placeholder="${placeholder}" ${prop.required ? 'required' : ''}>
-                        </div>`);
-                });
-
-                // Parts (Components like GPU/Storage)
-                data.parts.forEach(part => {
-                    $container.append(`
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-primary fw-bold small"><i class="fa fa-plus-circle me-1"></i>${part.label}</label>
-                            <input type="text" name="part_${part.label}" class="form-control form-control-sm" 
-                                   placeholder="Serial Number / Details" ${part.required ? 'required' : ''}>
-                        </div>`);
-                });
-
-                if (data.properties.length === 0 && data.parts.length === 0) {
-                    $container.html('<div class="col-12 text-muted small px-3">No extra specs defined for this type.</div>');
-                }
+                // Optional: Re-run your indexing function if you have one
+                // reIndexRows(); 
             }).fail(function() {
                 console.error("Error fetching type specs.");
             });
