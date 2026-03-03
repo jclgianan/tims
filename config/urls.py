@@ -31,6 +31,6 @@ urlpatterns = [
     path("generate-inventory-id/", views.generate_inventory_id, name="generate_inventory_id"),
     path("inventory-type/", views.create_inventory_type, name="inventory_type"),
     path('inventory-type/<int:type_id>/', views.create_inventory_type, name='inventory_type_edit'),
-    path('get-type-specs', views.get_type_specs, name='get_type_specs'),
+    path('get-type-specs/', views.get_type_specs, name='get_type_specs'),
     path('tickets/', include('tickets.urls')),
 ]

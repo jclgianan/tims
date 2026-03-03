@@ -31,19 +31,49 @@
           </tr>
         </thead>
         <tbody>
-          {% for item in items %}
-            <tr>
-              <td>{{ item.inventory_id }}</td>
-              <td>{{ item.type }}</td>
-              <td>{{ item.item_name }}</td>
-              <td>{{ item.status }}</td>
-              <td>{{ item.condition }}</td>
-              <td>
-                <button class="btn btn-sm btn-primary">Edit</button>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
+            {% for item in items %}
+                <tr>
+                <td class="align-middle">
+                    <span class="fw-bold">{{ item.inventory_id }}</span>
+                </td>
+                
+                <td class="align-middle">
+                    <i class="fas {{ item.type.icon }} me-1"></i> {{ item.type }}
+                </td>
+
+                <td class="align-middle">
+                    <div class="d-flex align-items-center flex-wrap">
+                        <span class="fw-bold me-2">{{ item.item_name }}</span>
+
+                        {% if item.parent %}
+                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 fw-normal" style="font-size: 0.65rem;">
+                                <i class="fas fa-link me-1"></i> Part of: {{ item.parent.inventory_id }}
+                            </span>
+                        {% elif item.sub_parts.all %}
+                            <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fw-normal" style="font-size: 0.65rem;">
+                                <i class="fas fa-microchip me-1"></i> Contains: 
+                                {% for part in item.sub_parts.all %}
+                                    {{ part.type.short_name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </td>
+
+                <td class="align-middle">
+                    <span class="badge {% if item.status == 'Available' %}bg-success{% else %}bg-secondary{% endif %}">
+                    {{ item.status }}
+                    </span>
+                </td>
+
+                <td class="align-middle">{{ item.condition }}</td>
+
+                <td class="align-middle text-end">
+                    <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button>
+                </td>
+                </tr>
+            {% endfor %}
+            </tbody>
       </table>
     </div>
   </div>
@@ -108,35 +138,52 @@
                 return;
             }
 
-            $.getJSON(`/get-type-specs/`, { type_id: typeId }, function(data) {
+            $.getJSON("{% url 'get_type_specs' %}", { type_id: typeId }, function(data) {
+                console.log("Data from server:", data); // Check this in F12 Console
                 $container.empty();
-                
-                // Properties (Specs like RAM/Processor)
+
+                // 1. Render Properties (RAM, CPU, etc.)
                 data.properties.forEach(prop => {
-                    let placeholder = prop.has_name ? "Enter Model/Name" : "Enter Specification";
                     $container.append(`
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small">${prop.label} ${prop.required ? '<span class="text-danger">*</span>' : ''}</label>
+                            <label class="form-label fw-bold small">${prop.label}</label>
                             <input type="text" name="prop_${prop.label}" class="form-control form-control-sm" 
-                                   placeholder="${placeholder}" ${prop.required ? 'required' : ''}>
+                                placeholder="Enter value..." ${prop.required ? 'required' : ''}>
                         </div>`);
                 });
 
-                // Parts (Components like GPU/Storage)
+                // 2. Render Parts (Motherboard, SSD, etc.)
                 data.parts.forEach(part => {
-                    $container.append(`
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-primary fw-bold small"><i class="fa fa-plus-circle me-1"></i>${part.label}</label>
-                            <input type="text" name="part_${part.label}" class="form-control form-control-sm" 
-                                   placeholder="Serial Number / Details" ${part.required ? 'required' : ''}>
-                        </div>`);
+                    let fieldsHtml = '';
+                    let partLabel = part.label; // Using the simplified label key from Python
+                    let partIcon = part.icon || 'fa-cube'; // Default icon, can be enhanced to be dynamic based on part type
+
+                    // If "Name" was checked in Type Manager
+                    if (part.has_name) {
+                        fieldsHtml += `<input type="text" name="part_name_${partLabel}" class="form-control form-control-sm mb-1" placeholder="Brand/Model Name">`;
+                    }
+
+                    // If "S/N" was checked in Type Manager
+                    if (part.is_serial) {
+                        fieldsHtml += `<input type="text" name="part_sn_${partLabel}" class="form-control form-control-sm" placeholder="Serial Number">`;
+                    }
+
+                    // Decide if we should show this part section
+                    if (part.has_name || part.is_serial || part.is_default) {
+                        $container.append(`
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small text-uppercase mb-1">
+                                    <i class="fas ${partIcon} me-1"></i> ${partLabel} 
+                                    ${part.is_default ? '<span class="badge bg-light text-secondary border px-1" style="font-size: 10px; vertical-align: middle;">Default</span>' : ''}
+                                </label>
+                                ${fieldsHtml || `<input type="text" name="part_val_${partLabel}" class="form-control form-control-sm" placeholder="Details">`}
+                            </div>`);
+                    }
                 });
 
                 if (data.properties.length === 0 && data.parts.length === 0) {
-                    $container.html('<div class="col-12 text-muted small px-3">No extra specs defined for this type.</div>');
+                    $container.html('<div class="col-12 text-muted small px-3">No extra specs needed.</div>');
                 }
-            }).fail(function() {
-                console.error("Error fetching type specs.");
             });
         });
     });

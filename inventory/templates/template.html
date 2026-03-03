@@ -7,8 +7,7 @@
     <title>Inventory Management System</title>
     <link rel="stylesheet" href="{% static 'assets/css/default/app.min.css' %}" />
     <link rel="stylesheet" href="{% static 'assets/css/vendor.min.css' %}" />
-    <link href="{% static 'assets/plugins/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}"
-          rel="stylesheet" />
+    <link href="{% static 'assets/plugins/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}" rel="stylesheet" />
     <style>
       /* This ensures the main app container fills exactly the screen minus the navbar */
       #wrapper {
@@ -47,14 +46,9 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom shadow-sm py-2">
       <div class="container-fluid d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-3">
-          <button class="btn btn-outline-light border-0 shop_menu" type="button">
-            <i class="fa-solid fa-list"></i>
-          </button>
+          <button class="btn btn-outline-light border-0 shop_menu" type="button"><i class="fa-solid fa-list"></i></button>
           <a class="navbar-brand d-flex align-items-center" href="#">
-            <img src="{% static 'assets/css/default/images/transparent/PICT.png' %}"
-                 alt="Logo"
-                 height="40"
-                 class="me-2" />
+            <img src="{% static 'assets/css/default/images/transparent/PICT.png' %}" alt="Logo" height="40" class="me-2" />
             <h1>IMTSystem</h1>
             {% comment %} <div class="text-light lh-1">
               <div id="clock" class="small fw-bold">00:00:00</div>
@@ -68,8 +62,7 @@
             <div class="fw-bold small">{{ user.username }}</div>
             <div class="smaller opacity-75" style="font-size: 0.75rem;">{{ user.email }}</div>
           </div>
-          <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center fw-bold"
-               style="width: 40px;
+          <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px;
                       height: 40px">{{ user.username|slice:':1'|upper }}</div>
         </div>
       </div>
@@ -77,10 +70,9 @@
     <div id="wrapper" class="d-flex flex-row flex-grow-1">
       {% include 'sidebar.html' %}
       <div id="page-content-wrapper" class="flex-grow-1">
-        <div id="content"
-             class="app-content flex-grow-1 p-4"
-             style="margin-left: 0 !important">
-          {% block content %}{% endblock %}
+        <div id="content" class="app-content flex-grow-1 p-4" style="margin-left: 0 !important">
+          {% block content %}
+          {% endblock %}
         </div>
       </div>
     </div>
@@ -89,22 +81,23 @@
     <script src="{% static 'assets/plugins/datatables.net/js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
     {% block page_js %}
+
     {% endblock %}
   </body>
   <style>
-  body {
-    opacity: 0;
-    transition: opacity 0.2s ease-in;
-  }
-  body.rendered {
-    opacity: 1;
-  }
+    body {
+      opacity: 0;
+      transition: opacity 0.2s ease-in;
+    }
+    body.rendered {
+      opacity: 1;
+    }
   </style>
   <script>
-  // This triggers as soon as the DOM is ready, 
-  // but before images/DataTables might be fully finished.
-  document.addEventListener("DOMContentLoaded", function() {
-    document.body.classList.add('rendered');
-  });
+    // This triggers as soon as the DOM is ready,
+    // but before images/DataTables might be fully finished.
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.classList.add('rendered')
+    })
   </script>
 </html>
