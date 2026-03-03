@@ -1,56 +1,57 @@
 {% extends "template.html" %}
-
-{% load static %} 
-
-{% block title %} Support Tickets {% endblock %}
-
+{% load static %}
+{% block title %}Support Tickets{% endblock %}
 {% block content %}
-<div class="panel panel-inverse">
-  <div class="panel-heading">
-    <h1 class="panel-title">Support Tickets</h1>
-  </div>
-  <div class="panel-body">
-    <table id="data-table-tickets" class="table table-striped table-bordered align-middle">
-      <thead>
-        <tr>
-          <th>Ticket ID</th>
-          <th>Device ID</th>
-          <th>Receiving Date</th>
-          <th>Name</th>
-          <th>Office</th>
-          <th>Item Name</th>
-          <th>Issue</th>
-          <th>Solution</th>
-          <th>Note</th>
-          <th>Release Date</th>
-          <th>Status</th>
-
-        </tr>
-      </thead>
-      <tbody>
-        {% for ticket in tickets %}
+  <div class="panel panel-inverse">
+    <div class="panel-heading">
+      <h1 class="panel-title">Support Tickets</h1>
+    </div>
+    <div class="panel-body">
+      <table id="data-table-tickets"
+             class="table table-striped table-bordered align-middle">
+        <thead>
           <tr>
-            <td>{{ ticket.id }}</td>
-            <td>{{ ticket.supportticket.device_id }}</td> <!--to be added-->
-            <td>{{ ticket.receiving_date }}</td> <!--to be added-->
-            <td>{{ ticket.name }}</td>
-            <td>{{ ticket.office_name }}</td>
-            <td>{{ ticket.supportticket.item_name }}</td>
-            <td>{{ ticket.supportticket.issue }}</td>
-            <td>{{ ticket.supportticket.solution }}</td>
-            <td>{{ ticket.note }}</td>
-            <td>{{ ticket.release_date }}</td>
-            <td>
-                <span class="badge bg-secondary">{{ ticket.get_status_display }}</span>
-            </td>
+            <th width="1%">
+              <input type="checkbox" id="select-all">
+            </th>
+            <th>Ticket ID</th>
+            <th>Device ID</th>
+            <th>Receiving Date</th>
+            <th>Name</th>
+            <th>Office</th>
+            <th>Item Name</th>
+            <th>Issue</th>
+            <th>Solution</th>
+            <th>Note</th>
+            <th>Release Date</th>
+            <th>Status</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for ticket in tickets %}
+            <tr>
+              <td>{{ ticket.id }}</td>
+              <td>{{ ticket.supportticket.device_id }}</td>
+              <!--to be added-->
+              <td>{{ ticket.receiving_date }}</td>
+              <!--to be added-->
+              <td>{{ ticket.name }}</td>
+              <td>{{ ticket.office_name }}</td>
+              <td>{{ ticket.supportticket.item_name }}</td>
+              <td>{{ ticket.supportticket.issue }}</td>
+              <td>{{ ticket.supportticket.solution }}</td>
+              <td>{{ ticket.note }}</td>
+              <td>{{ ticket.release_date }}</td>
+              <td>
+                <span class="badge bg-secondary">{{ ticket.get_status_display }}</span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 {% endblock %}
-
 {% block page_js %}
   <script src="{% static 'assets/plugins/datatables.net/js/jquery.dataTables.min.js' %}"></script>
   <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
