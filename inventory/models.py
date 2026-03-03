@@ -14,6 +14,13 @@ class Profile(models.Model):
 class InventoryItem(models.Model):
     inventory_id = models.CharField(max_length=50, unique=True)
     item_name = models.CharField(max_length=255)
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sub_parts",
+    )
     type = models.ForeignKey("InventoryType", on_delete=models.PROTECT, null=True)
     processor = models.CharField(max_length=255, blank=True, null=True)
     ram = models.CharField(max_length=100, blank=True, null=True)
@@ -41,15 +48,22 @@ class InventoryType(models.Model):
 
 
 class Property(models.Model):
-    inventory_type = models.ForeignKey(InventoryType, related_name="properties", on_delete=models.CASCADE)
+    inventory_type = models.ForeignKey(
+        InventoryType, related_name="properties", on_delete=models.CASCADE
+    )
     label = models.CharField(max_length=100)
-    default_value = models.CharField(max_length=255, blank=True, null=True) # Added this
+    default_value = models.CharField(
+        max_length=255, blank=True, null=True
+    )  # Added this
     has_name_input = models.BooleanField(default=False)
     is_required = models.BooleanField(default=False)
 
+
 class Part(models.Model):
-    parent_type = models.ForeignKey(InventoryType, related_name="parts", on_delete=models.CASCADE)
+    parent_type = models.ForeignKey(
+        InventoryType, related_name="parts", on_delete=models.CASCADE
+    )
     part_type = models.ForeignKey(InventoryType, on_delete=models.CASCADE)
     is_default = models.BooleanField(default=True)
-    has_name = models.BooleanField(default=False) # Added this
-    is_serial = models.BooleanField(default=False) # Added this
+    has_name = models.BooleanField(default=False)  # Added this
+    is_serial = models.BooleanField(default=False)  # Added this

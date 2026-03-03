@@ -1,3 +1,4 @@
+import random
 from urllib import request
 
 from django.shortcuts import redirect, render, get_object_or_404
@@ -11,6 +12,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import InventoryType, Property, Part
+from django.db.models import Case, When, Value, IntegerField
 
 
 def login_view(request):
@@ -56,7 +58,12 @@ def dashboard(request):
 @login_required(login_url="login")
 def inventory_list(request):
 
-    items = InventoryItem.objects.all()
+    items = (
+        InventoryItem.objects.select_related("type", "parent")
+        .prefetch_related("sub_parts", "sub_parts__type")
+        .all()
+        .order_by("inventory_id")
+    )
     all_types = InventoryType.objects.all().order_by("name")
 
     context = {
@@ -69,45 +76,77 @@ def inventory_list(request):
 @login_required(login_url="login")
 def inventory_create(request):
     if request.method == "POST":
-        # ... (your existing prefix/qty logic) ...
+        qty = int(request.POST.get("quantity", 1))
+        item_type_id = request.POST.get("type")
+        main_type = InventoryType.objects.get(id=item_type_id)
 
-        # Collect dynamic properties and parts from POST
-        dynamic_data = {}
-        for key, value in request.POST.items():
-            if key.startswith("prop_") or key.startswith("part_"):
-                clean_label = (
-                    key.replace("prop_", "").replace("part_", "").replace("_", " ")
-                )
-                dynamic_data[clean_label] = value
+        # 1. Prepare Parent items
+        current_count = InventoryItem.objects.filter(type=main_type).count()
+        parents_to_create = []
+        parent_ids_lsit = []
 
-        # Convert dictionary to a readable string for the 'Notes' field
-        spec_summary = "\n".join([f"{k}: {v}" for k, v in dynamic_data.items() if v])
-        original_notes = request.POST.get("notes", "")
-        final_notes = (
-            f"{original_notes}\n\n--- AUTO-GENERATED SPECS ---\n{spec_summary}"
-        )
-
-        items_to_create = []
         for i in range(qty):
-            # ... (ID generation logic) ...
+            new_number = current_count + i + 1
+            new_id = f"{main_type.short_name}-{new_number:05d}"  # e.g. PC-00001
+            parent_ids_lsit.append(new_id)
 
-            items_to_create.append(
+            parents_to_create.append(
                 InventoryItem(
                     inventory_id=new_id,
-                    item_name=request.POST.get("device_name"),
-                    type_id=request.POST.get(
-                        "item_type"
-                    ),  # Use _id to avoid extra queries
+                    item_name=request.POST.get("item_name"),
+                    type=main_type,
                     status=request.POST.get("status"),
                     condition=request.POST.get("condition"),
-                    # We store the dynamic stuff in notes or a dedicated JSONField
-                    notes=final_notes,
-                    # ... other static fields ...
                 )
             )
 
-        InventoryItem.objects.bulk_create(items_to_create)
-        messages.success(request, f"Added {qty} items with dynamic specs.")
+        # Bulk create parents to get their generated IDs back
+        created_parents = InventoryItem.objects.bulk_create(parents_to_create)
+
+        created_parents = InventoryItem.objects.filter(inventory_id__in=parent_ids_lsit)
+
+        # 2. Prepare Children
+        children_to_create = []
+        part_definitions = main_type.parts.all()
+
+        for parent in created_parents:
+
+            parent_suffix = parent.inventory_id.split("-")[-1]
+
+            for part_def in part_definitions:
+                child_type = part_def.part_type  # The Type of the part (e.g. RAM)
+                label = child_type.name
+
+                # Match the names used in your JavaScript dynamic fields
+                p_name = request.POST.get(f"part_name_{label}")
+                p_sn = request.POST.get(f"part_sn_{label}")
+
+                # Create child only if data was entered
+                if p_name or p_sn:
+                    child_id = f"{child_type.short_name}-{parent_suffix}"  # Get the numeric part of the parent's ID
+
+                    children_to_create.append(
+                        InventoryItem(
+                            inventory_id=child_id,
+                            item_name=(
+                                p_name
+                                if p_name
+                                else f"{label} for {parent.inventory_id}"
+                            ),
+                            type=child_type,
+                            status=parent.status,
+                            condition=parent.condition,
+                            parent=parent,
+                            notes=f"S/N: {p_sn}" if p_sn else p_val,
+                        )
+                    )
+
+        if children_to_create:
+            InventoryItem.objects.bulk_create(children_to_create)
+
+        messages.success(
+            request, f"Successfully created {qty} devices and their components."
+        )
         return redirect("inventory_list")
 
 
@@ -258,15 +297,18 @@ def get_type_specs(request):
         for prop in inv_type.properties.all()
     ]
 
-    parts = [
-        {
-            "id": part.part_type.id,
-            "name": part.part_type.name,
-            "has_name": part.has_name,
-            "is_default": part.is_default,
-            "is_serial": part.is_serial,
-        }
-        for part in inv_type.parts.all()
-    ]
+    parts = []
+    for pt in inv_type.parts.all():
+        parts.append(
+            {
+                "label": pt.part_type.name,
+                "icon": pt.part_type.icon,
+                "has_name": pt.has_name,
+                "is_serial": pt.is_serial,
+                "is_default": pt.is_default,
+            }
+        )
 
-    return JsonResponse({"properties": properties, "parts": parts})
+    return JsonResponse(
+        {"properties": properties, "parts": parts, "type_icon": inv_type.icon}
+    )

@@ -16,9 +16,9 @@
             <div class="p-2 border-bottom bg-white">
                 <div class="input-group">
                     <input type="text" id="typeSearch" class="form-control form-control-sm" placeholder="Search types...">
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addInventoryModal">
+                    <a href="{% url 'inventory_type' %}" class="btn btn-primary btn-sm">
                         <i class="fa fa-plus"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
             <div class="list-group list-group-flush overflow-auto flex-grow-1" id="typeList">
@@ -136,6 +136,14 @@
             $(this).find('input[name^="part_default"]').attr('name', `part_default_${index}`);
             $(this).find('input[name^="part_serial"]').attr('name', `part_serial_${index}`);
         });
+    }
+
+    function removeRow(btn) {
+        // 1. Find the row (tr) and remove it
+        $(btn).closest('tr').remove();
+        
+        // 2. Re-index all remaining rows so the name indexes (0, 1, 2...) stay sequential
+        reIndexRows();
     }
 
     function addProperty() {
