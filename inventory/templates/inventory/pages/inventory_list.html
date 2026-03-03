@@ -86,163 +86,116 @@
 
   <script>
     $(document).ready(function () {
-        // 1. Initialize DataTable
-        $('#data-table-default').DataTable({
-            pageLength: 10,
-            lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, 'All']
-            ],
-            responsive: true,
-            scrollY: '55vh',
-            scrollCollapse: true,
-            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
-        });
+    // 1. Initialize DataTable
+    $('#data-table-default').DataTable({
+        pageLength: 10,
+        responsive: true,
+        scrollY: '55vh',
+        scrollCollapse: true,
+        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+    });
 
-        // 2. Quantity Plus/Minus logic
-        $('.plus-btn').on('click', function () {
-            let qty = parseInt($('#quantity').val()) || 1;
-            if (qty < 1000) $('#quantity').val(qty + 1);
-        });
+    // 2. Quantity Logic
+    $('.plus-btn').on('click', function () {
+        let qty = parseInt($('#quantity').val()) || 1;
+        if (qty < 1000) $('#quantity').val(qty + 1);
+    });
+    $('.minus-btn').on('click', function () {
+        let qty = parseInt($('#quantity').val()) || 1;
+        if (qty > 1) $('#quantity').val(qty - 1);
+    });
 
-        $('.minus-btn').on('click', function () {
-            let qty = parseInt($('#quantity').val()) || 1;
-            if (qty > 1) $('#quantity').val(qty - 1);
-        });
-
-        // 3. Generate Inventory ID
-        $('#generateInventoryId').on('click', function () {
-            const typeId = $('#type').val();
-            if (!typeId) {
-                alert('Please select a Type first!');
-                return;
-            }
-
-            $.ajax({
-                url: "{% url 'generate_inventory_id' %}",
-                data: { type_id: typeId },
-                dataType: 'json',
-                success: function (data) {
-                    $('#inventory_id').val(data.inventory_id);
-                }
-            });
-        });
-
-        // 4. Dynamic Input Form for Add Inventory Modal
-        $(document).on('change', '#type, #item_type', function () {
-            const typeId = $(this).val();
-            const $container = $('#dynamic-fields-row');
-
-            if (!typeId) {
-                $container.html('<div class="col-12 text-muted small px-3">Select a Type...</div>');
-                return;
-            }
-
-            $.getJSON("{% url 'get_type_specs' %}", { type_id: typeId }, function(data) {
-                console.log("Data from server:", data); // Check this in F12 Console
-                $container.empty();
-
-                // 1. Render Properties (RAM, CPU, etc.)
-                data.properties.forEach(prop => {
-                    $container.append(`
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small">${prop.label}</label>
-                            <input type="text" name="prop_${prop.label}" class="form-control form-control-sm" 
-                                placeholder="Enter value..." ${prop.required ? 'required' : ''}>
-                        </div>`);
-                });
-
-                // 2. Render Parts (Motherboard, SSD, etc.)
-                data.parts.forEach(part => {
-                    let fieldsHtml = '';
-                    let partLabel = part.label; // Using the simplified label key from Python
-                    let partIcon = part.icon || 'fa-cube'; // Default icon, can be enhanced to be dynamic based on part type
-
-                    // If "Name" was checked in Type Manager
-                    if (part.has_name) {
-                        fieldsHtml += `<input type="text" name="part_name_${partLabel}" class="form-control form-control-sm mb-1" placeholder="Brand/Model Name">`;
-                    }
-
-                    // If "S/N" was checked in Type Manager
-                    if (part.is_serial) {
-                        fieldsHtml += `<input type="text" name="part_sn_${partLabel}" class="form-control form-control-sm" placeholder="Serial Number">`;
-                    }
-
-                    // Decide if we should show this part section
-                    if (part.has_name || part.is_serial || part.is_default) {
-                        $container.append(`
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small text-uppercase mb-1">
-                                    <i class="fas ${partIcon} me-1"></i> ${partLabel} 
-                                    ${part.is_default ? '<span class="badge bg-light text-secondary border px-1" style="font-size: 10px; vertical-align: middle;">Default</span>' : ''}
-                                </label>
-                                ${fieldsHtml || `<input type="text" name="part_val_${partLabel}" class="form-control form-control-sm" placeholder="Details">`}
-                            </div>`);
-                    }
-                });
-
-                if (data.properties.length === 0 && data.parts.length === 0) {
-                    $container.html('<div class="col-12 text-muted small px-3">No extra specs needed.</div>');
-                }
-            });
+    // 3. Inventory ID Generator
+    $('#generateInventoryId').on('click', function () {
+        const typeId = $('#type').val();
+        if (!typeId) { alert('Please select a Type first!'); return; }
+        $.getJSON("{% url 'generate_inventory_id' %}", { type_id: typeId }, function (data) {
+            $('#inventory_id').val(data.inventory_id);
         });
     });
 
-    // 5. Type Manager Logic (Adding/Removing Rows)
-    // Initialize indices based on how many rows exist in the tables already
-    let propIndex = document.querySelectorAll('#propertyBody tr').length;
-    let partIndex = document.querySelectorAll('#partBody tr').length;
+    // 4. UNIFIED DYNAMIC FORM LOGIC (The Fix)
+    $(document).on('change', '#type', function () {
+        const typeId = $(this).val();
+        const $specsContainer = $('#dynamicSpecsContainer');
+        const $btnContainer = $('#dynamicButtonsContainer');
+        const $placeholder = $('#dynamic-fields-row .text-muted');
 
-    function addProperty() {
-        const tbody = document.getElementById('propertyBody');
-        if (!tbody) return;
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="text" name="prop_label[]" class="form-control form-control-sm" required></td>
-            <td><input type="text" name="prop_default[]" class="form-control form-control-sm"></td>
-            <td class="text-center"><input type="checkbox" name="prop_has_name_${propIndex}" class="form-check-input"></td>
-            <td class="text-center"><input type="checkbox" name="prop_required_${propIndex}" class="form-check-input"></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="this.closest('tr').remove()">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-        propIndex++; 
-    }
+        // Clear everything first
+        $btnContainer.empty();
+        $specsContainer.empty();
 
-    function addPart() {
-        const tbody = document.getElementById('partBody');
-        if (!tbody) return;
+        if (!typeId) {
+            $placeholder.show();
+            return;
+        }
 
-        // Build options from the Django template variable
-        let options = '<option value="">-- Choose Type --</option>';
-        {% if all_types %}
-            {% for t in all_types %}
-                options += '<option value="{{ t.id }}">{{ t.name|escapejs }}</option>';
-            {% endfor %}
-        {% endif %}
+        $placeholder.hide();
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <select name="part_id[]" class="form-select form-select-sm" required>
-                    ${options}
-                </select>
-            </td>
-            <td class="text-center"><input type="checkbox" name="part_has_name_${partIndex}" class="form-check-input"></td>
-            <td class="text-center"><input type="checkbox" name="part_default_${partIndex}" class="form-check-input"></td>
-            <td class="text-center"><input type="checkbox" name="part_serial_${partIndex}" class="form-check-input"></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="this.closest('tr').remove()">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-        partIndex++;
-    }
+        $.getJSON("{% url 'get_type_specs' %}", { type_id: typeId }, function(data) {
+            console.log("Data from server:", data);
+
+            // A. Render Properties (Fixed specs like OS, CPU, etc.)
+            if (data.properties) {
+                data.properties.forEach(prop => {
+                    // Match Python key 'is_required'
+                    const reqAttr = prop.is_required ? 'required' : ''; 
+                    $specsContainer.append(`
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small">${prop.label}</label>
+                            <input type="text" name="prop_${prop.label}" class="form-control form-control-sm" 
+                                   placeholder="Value" ${reqAttr}>
+                        </div>`);
+                });
+            }
+
+            // B. Render Add Buttons for Parts (RAM, SSD, etc.)
+            if (data.parts) {
+                data.parts.forEach(part => {
+                    const $btn = $(`
+                        <button type="button" class="btn btn-outline-primary btn-sm mb-2 me-2">
+                            <i class="fa fa-plus me-1"></i> Add ${part.label}
+                        </button>
+                    `);
+
+                    $btn.on('click', function(e) {
+                        e.preventDefault();
+                        addComponentSlot(part.id, part.label, part.has_name, part.is_serial);
+                    });
+
+                    $btnContainer.append($btn);
+
+                    // C. Auto-add default components (like Motherboard)
+                    if (part.is_default) {
+                        addComponentSlot(part.id, part.label, part.has_name, part.is_serial);
+                    }
+                });
+            }
+        });
+    });
+});
+
+// Helper function (Keep this outside $(document).ready so it's globally accessible)
+function addComponentSlot(id, label, hasName, isSerial) {
+    const $container = $('#dynamicSpecsContainer');
+    const count = $container.find(`[data-part-id="${id}"]`).length + 1;
+    
+    let fields = '';
+    if (hasName) fields += `<input type="text" name="part_name_${id}[]" class="form-control form-control-sm mb-1" placeholder="Brand/Model">`;
+    if (isSerial) fields += `<input type="text" name="part_sn_${id}[]" class="form-control form-control-sm" placeholder="Serial Number">`;
+
+    const html = `
+        <div class="col-md-6 mb-3" data-part-id="${id}">
+            <div class="p-2 border rounded bg-light shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-bold text-primary text-uppercase">${label} #${count}</span>
+                    <button type="button" class="btn-close" style="font-size: 0.5rem;" onclick="$(this).closest('.col-md-6').remove()"></button>
+                </div>
+                ${fields}
+                <input type="hidden" name="part_type_id[]" value="${id}">
+            </div>
+        </div>`;
+    $container.append(html);
+}
 </script>
 {% endblock %}

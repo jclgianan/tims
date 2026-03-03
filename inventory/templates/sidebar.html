@@ -5,9 +5,13 @@
       <li class="nav-item">
         <a href="{% url 'dashboard' %}"
           class="nav-link d-flex align-items-center gap-3 p-3 rounded fs-5 {% if request.resolver_match.url_name == 'dashboard' %}
+            
              bg-primary text-white shadow-sm
+
           {% else %}
+            
              text-dark hover-bg-light
+
           {% endif %}">
           <span class="menu_icon"><i class="fa-solid fa-house"></i></span>
           <span class="menu_text fw-medium">Dashboard</span>

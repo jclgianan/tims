@@ -12,7 +12,10 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import InventoryType, Property, Part
-from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Case, When, Value
+from django.db.models import Max
+from django.db.models import IntegerField
+from django.db.models.functions import Cast, Right
 
 
 def login_view(request):
@@ -80,15 +83,31 @@ def inventory_create(request):
         item_type_id = request.POST.get("type")
         main_type = InventoryType.objects.get(id=item_type_id)
 
-        # 1. Prepare Parent items
-        current_count = InventoryItem.objects.filter(type=main_type).count()
-        parents_to_create = []
-        parent_ids_lsit = []
+        # Find the highest existing number for this specific prefix to avoid duplicates
+        last_item = (
+            InventoryItem.objects.filter(
+                inventory_id__startswith=f"{main_type.short_name}-"
+            )
+            .annotate(num_part=Cast(Right("inventory_id", 5), IntegerField()))
+            .order_by("-num_part")
+            .first()
+        )
 
-        for i in range(qty):
-            new_number = current_count + i + 1
-            new_id = f"{main_type.short_name}-{new_number:05d}"  # e.g. PC-00001
-            parent_ids_lsit.append(new_id)
+        start_number = (last_item.num_part + 1) if last_item else 1
+
+        parents_to_create = []
+        parent_ids_list = []
+        current_num = start_number
+
+        for _ in range(qty):
+            # Loop to ensure the generated ID doesn't exist (double safety)
+            while InventoryItem.objects.filter(
+                inventory_id=f"{main_type.short_name}-{current_num:05d}"
+            ).exists():
+                current_num += 1
+
+            new_id = f"{main_type.short_name}-{current_num:05d}"
+            parent_ids_list.append(new_id)
 
             parents_to_create.append(
                 InventoryItem(
@@ -99,47 +118,71 @@ def inventory_create(request):
                     condition=request.POST.get("condition"),
                 )
             )
+            current_num += 1
 
         # Bulk create parents to get their generated IDs back
         created_parents = InventoryItem.objects.bulk_create(parents_to_create)
 
-        created_parents = InventoryItem.objects.filter(inventory_id__in=parent_ids_lsit)
+        created_parents = InventoryItem.objects.filter(inventory_id__in=parent_ids_list)
 
         # 2. Prepare Children
         children_to_create = []
-        part_definitions = main_type.parts.all()
+
+        # We fetch the list of IDs from the hidden inputs: <input type="hidden" name="part_type_id[]" value="${id}">
+        submitted_part_type_ids = request.POST.getlist("part_type_id[]")
 
         for parent in created_parents:
+            # We use a dictionary to track how many of each type we've processed
+            # for THIS specific parent (to handle multiple RAM sticks, etc.)
+            type_instance_count = {}
 
-            parent_suffix = parent.inventory_id.split("-")[-1]
+            for pt_id in submitted_part_type_ids:
+                child_type = InventoryType.objects.get(id=pt_id)
+                prefix = child_type.short_name.upper()
 
-            for part_def in part_definitions:
-                child_type = part_def.part_type  # The Type of the part (e.g. RAM)
-                label = child_type.name
+                # Update our local counter for this specific part type
+                type_instance_count[pt_id] = type_instance_count.get(pt_id, 0)
+                instance_index = type_instance_count[pt_id]
 
-                # Match the names used in your JavaScript dynamic fields
-                p_name = request.POST.get(f"part_name_{label}")
-                p_sn = request.POST.get(f"part_sn_{label}")
+                # Fetch the arrays for this specific ID
+                p_names = request.POST.getlist(f"part_name_{pt_id}[]")
+                p_sns = request.POST.getlist(f"part_sn_{pt_id}[]")
 
-                # Create child only if data was entered
-                if p_name or p_sn:
-                    child_id = f"{child_type.short_name}-{parent_suffix}"  # Get the numeric part of the parent's ID
+                # Get the specific data for THIS instance of the part
+                name_val = (
+                    p_names[instance_index] if instance_index < len(p_names) else ""
+                )
+                sn_val = p_sns[instance_index] if instance_index < len(p_sns) else ""
 
-                    children_to_create.append(
-                        InventoryItem(
-                            inventory_id=child_id,
-                            item_name=(
-                                p_name
-                                if p_name
-                                else f"{label} for {parent.inventory_id}"
-                            ),
-                            type=child_type,
-                            status=parent.status,
-                            condition=parent.condition,
-                            parent=parent,
-                            notes=f"S/N: {p_sn}" if p_sn else p_val,
-                        )
+                # ID Generation Logic (Find next available number for the prefix)
+                child_num = 1
+                while True:
+                    potential_id = f"{prefix}-{child_num:05d}"
+                    # Check DB and current unsaved batch
+                    if not InventoryItem.objects.filter(
+                        inventory_id=potential_id
+                    ).exists() and not any(
+                        c.inventory_id == potential_id for c in children_to_create
+                    ):
+                        child_id = potential_id
+                        break
+                    child_num += 1
+
+                children_to_create.append(
+                    InventoryItem(
+                        inventory_id=child_id,
+                        item_name=name_val
+                        or f"{child_type.name} for {parent.inventory_id}",
+                        type=child_type,
+                        status="In Use",
+                        condition=parent.condition,
+                        parent=parent,
+                        notes=f"S/N: {sn_val}" if sn_val else "",
                     )
+                )
+
+                # Increment so the next time we see this pt_id, we grab the next name/sn in the list
+                type_instance_count[pt_id] += 1
 
         if children_to_create:
             InventoryItem.objects.bulk_create(children_to_create)
@@ -153,34 +196,23 @@ def inventory_create(request):
 @login_required(login_url="login")
 def generate_inventory_id(request):
     type_id = request.GET.get("type_id")
+    category_name = request.GET.get("category")
 
-    if not type_id:
-        type_name = request.GET.get("category")
-        inv_type = InventoryType.objects.filter(name=type_name).first()
-    else:
+    if type_id:
         inv_type = InventoryType.objects.filter(id=type_id).first()
+    else:
+        inv_type = InventoryType.objects.filter(name=category_name).first()
 
     prefix = inv_type.short_name.upper() if inv_type and inv_type.short_name else "OTH"
 
-    # Find last inventory_id starting with the prefix
-    last_item = (
-        InventoryItem.objects.filter(inventory_id__startswith=f"{prefix}-")
-        .order_by("-inventory_id")
-        .first()
-    )
-
-    if last_item:
-        # Extract last 5 digits (e.g., CS-00005 -> 5)
-        try:
-            last_number = int(last_item.inventory_id.split("-")[-1])
-            next_number = last_number + 1
-        except (ValueError, IndexError):
-            next_number = 1
-    else:
-        next_number = 1
-
-    # Format: PREFIX-00001
-    inventory_id = f"{prefix}-{next_number:05d}"
+    # GAP-FILLER: Always finds the first unused number for this prefix
+    next_number = 1
+    while True:
+        potential_id = f"{prefix}-{next_number:05d}"
+        if not InventoryItem.objects.filter(inventory_id=potential_id).exists():
+            inventory_id = potential_id
+            break
+        next_number += 1
 
     return JsonResponse({"inventory_id": inventory_id})
 
@@ -261,8 +293,8 @@ def create_inventory_type(request, type_id=None):
                     parent_type=selected_type,
                     part_type=part_type_obj,
                     has_name=has_name,
-                    is_default=is_def,
                     is_serial=is_ser,
+                    is_default=is_def,
                 )
 
         if type_id:
@@ -301,6 +333,7 @@ def get_type_specs(request):
     for pt in inv_type.parts.all():
         parts.append(
             {
+                "id": pt.part_type.id,
                 "label": pt.part_type.name,
                 "icon": pt.part_type.icon,
                 "has_name": pt.has_name,
