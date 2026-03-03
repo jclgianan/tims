@@ -1,8 +1,6 @@
 {% extends "template.html" %}
 {% load static %}
-{% block title %}
-  All Tickets - TIMS
-{% endblock title %}
+{% block title %}All Tickets - TIMS{% endblock %}
 {% block content %}
   <div class="panel panel-inverse">
     <div class="panel-heading">
@@ -54,7 +52,7 @@
       </table>
     </div>
   </div>
-{% endblock content %}
+{% endblock %}
 {% block page_js %}
   <script src="{% static 'assets/plugins/datatables.net/js/jquery.dataTables.min.js' %}"></script>
   <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
@@ -63,26 +61,26 @@
       $('#data-table-tickets').DataTable({
         responsive: true,
         pageLength: 10,
-        order: [[0, "desc"]] // Show newest ID first
+        order: [[0, "desc"]]
       });
     });
 
     
     $(document).ready(function () {
-    // Logic for "Select All" checkbox
+    // "Select All" checkbox
     $('#select-all').on('click', function () {
         $('.ticket-checkbox').prop('checked', this.checked);
     });
 
-    // Logic to handle individual clicks
+    // individual clicks
     $('.ticket-checkbox').on('change', function() {
         if ($(this).is(':checked')) {
-            $(this).closest('tr').addClass('table-primary'); // Highlight selected row
+            $(this).closest('tr').addClass('table-primary');
         } else {
             $(this).closest('tr').removeClass('table-primary');
-            $('#select-all').prop('checked', false); // Uncheck "Select All" if one is unchecked
+            $('#select-all').prop('checked', false); 
         }
     });
 });
   </script>
-{% endblock page_js %}
+{% endblock %}

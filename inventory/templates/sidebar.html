@@ -19,9 +19,9 @@
       </li>
 
       <li class="nav-item mt-2">
-        <div class="nav-link d-flex align-items-center gap-3 text-dark text-uppercase fw-black small mb-2">
+        <div class="nav-link d-flex align-items-center gap-3 text-dark text-uppercase fw-black small mb-2 {% if request.resolver_match.url_name == 'tickets' %} bg-primary text-white shadow-sm {% else %} text-dark hover-bg-light {% endif %}">
           <i class="fa-solid fa-ticket"></i>
-          <a href="{% url 'ticket_list' %}" style="letter-spacing: 1px; font-weight: 900; text-decoration: none; color: rgb(45, 53, 60);">Tickets</a>
+          <a href="{% url 'ticket_list' %}" style="letter-spacing: 1px; font-weight: 900; text-decoration: none; color: rgb(45, 53, 60);"class="{% if request.resolver_match.url_name == 'ticket_list' %}text-primary{% else %}text-dark{% endif %}">Tickets</a>
         </div>
 
         <ul class="nav flex-column ms-4 border-start border-dark ps-3 gap-2">
