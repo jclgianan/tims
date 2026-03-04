@@ -18,21 +18,41 @@ def support_ticket_list(request):
     
     return render(request, 'tickets/support_list.html', {'tickets': tickets})
 
-def add_ticket_ajax(request):
-    if request.method == "POST":
-        customer = request.POST.get('customer_name')
-        t_type = request.POST.get('ticket_type')
-        desc = request.POST.get('description')
-        r_date = request.POST.get('release_date') or None
-        
-        # Create the ticket object
-        ticket = Ticket.objects.create(
-            customer_name=customer,
-            ticket_type=t_type,
-            description=desc,
-            release_date=r_date,
-            status='Pending' # Default status
+def add_ticket_printing(request):
+    if request.method == 'POST':
+        new_print_ticket = PrintingTicket.objects.create(
+            ##parent
+            name=request.POST.get('name'),
+            office_name=request.POST.get('office_name'),
+            
+            ##child
+            title=request.POST.get('title'),
+            width=request.POST.get('width'),
+            height=request.POST.get('height'),
+            quantity=request.POST.get('quantity')
         )
         
-        return JsonResponse({"status": "success", "message": f"Ticket #{ticket.id} created!"})
-    return JsonResponse({"status": "error"}, status=400)
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+
+def printing_tickets_json(request):
+    tickets = PrintingTicket.objects.all().order_by('-id')
+    data = []
+    
+    for t in tickets:
+        data.append({
+            "id": t.id,
+            "receiving_date": t.receiving_date.strftime("%Y-%m-%d %H:%M"),
+            "name": t.name,
+            "office": t.office_name,
+            "title": t.title,
+            "size": f"{float(t.width)} x {float(t.height)} ft",
+            "quantity": str(t.quantity),
+            "deadline": t.deadline.strftime("%Y-%m-%d %H:%M") if t.deadline else "N/A",
+            "file": t.file_link,
+            "release_date": t.release_date.strftime("%Y-%m-%d %H:%M") if t.release_date else "N/A",
+            "status": t.get_status_display(),
+        })
+    return JsonResponse({'data': data})

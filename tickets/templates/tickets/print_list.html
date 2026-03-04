@@ -120,7 +120,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Save Ticket</button>
+          <button type="button" id="btnSaveTicket" class="btn btn-primary">Save Ticket</button>
         </div>
       </div>
     </div>
@@ -136,6 +136,28 @@
   <script>
     $(document).ready(function () {
       var table = $('#data-table-tickets').DataTable({
+
+        ajax: "{% url 'print_ticket_data' %}", 
+
+        columns: [
+            { 
+                data: 'id', 
+                render: function(data) {
+                    return '<input type="checkbox" name="selected_tickets" value="' + data + '">';
+                }
+            },
+            { data: 'id' },
+            { data: 'receiving_date' },
+            { data: 'name' },
+            { data: 'office' },
+            { data: 'title' },
+            { data: 'size' }, 
+            { data: 'quantity' },
+            { data: 'deadline' },
+            { data: 'file' },
+            { data: 'release_date' },
+            { data: 'status' }
+        ],
         responsive: true,
         pageLength: 10,
         dom: '<"row mb-3"<"col-md-6"B><"col-md-6 d-flex justify-content-end"<"me-3"l>f>>rtip',
@@ -163,6 +185,38 @@
       $('#check-all').on('click', function() {
           var rows = table.rows({ 'search': 'applied' }).nodes();
           $('input[type="checkbox"]', rows).prop('checked', this.checked);
+      });
+
+      $(document).on('click', '#btnSaveTicket', function(e) {
+          e.preventDefault();
+          console.log("savve");
+
+          var formElement = document.getElementById('addTicketForm');
+          var formData = new FormData(formElement);
+
+          $.ajax({
+              url: "{% url 'add_ticket_ajax' %}",
+              type: "POST",
+              data: formData,
+              processData: false,
+              contentType: false,
+              success: function(response) {
+                  if (response.success) {
+
+                      $('#addTicketModal').modal('hide');
+
+                      $('#addTicketForm')[0].reset();
+
+                      table.ajax.reload(); 
+                      
+                      console.log("Table refreshed successfully!");
+                  }
+              },
+              error: function(xhr) {
+                  console.error("Submission failed:", xhr.responseText);
+              }
+          });
+
       });
     });
   </script>
