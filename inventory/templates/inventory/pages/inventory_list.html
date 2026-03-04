@@ -68,8 +68,20 @@
 
                 <td class="align-middle">{{ item.condition }}</td>
 
-                <td class="align-middle text-end">
-                    <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button>
+                <td class="align-middle text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewItemModal{{ item.id }}" title="View Item">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        
+                        <button class="btn btn-sm btn-outline-success" title="Edit Ticket">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        
+                        <button class="btn btn-sm btn-outline-danger" title="Delete Ticket">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
                 </tr>
             {% endfor %}
@@ -78,6 +90,8 @@
     </div>
   </div>
   {% include 'modals/addInventory.html' %}
+  {% include 'modals/inventoryDetail.html' %}
+
 {% endblock %} {% block page_js %}
   <script src="{% static 'assets/plugins/datatables.net/js/jquery.dataTables.min.js' %}"></script>
   <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
