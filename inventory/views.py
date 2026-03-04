@@ -345,3 +345,11 @@ def get_type_specs(request):
     return JsonResponse(
         {"properties": properties, "parts": parts, "type_icon": inv_type.icon}
     )
+
+
+def inventory_detail(request, inventory_id):
+    item = get_object_or_404(InventoryItem, id=inventory_id)
+    context = {
+        "item": item,
+    }
+    return render(request, "inventory/pages/inventoryDetail.html", context)

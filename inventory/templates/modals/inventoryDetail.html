@@ -1,0 +1,34 @@
+<div class="modal fade" id="viewItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Item Details: {{ item.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>ID:</strong> <span>#{{ item.id }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Type:</strong> <span>{{ item.category }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Stock Level:</strong> 
+                        <span class="badge {% if item.quantity < 5 %}bg-danger{% else %}bg-success{% endif %}">
+                            {{ item.quantity }}
+                        </span>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Description:</strong>
+                        <p class="text-muted small mt-2">{{ item.description|default:"No description provided." }}</p>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="" class="btn btn-primary">Edit Item</a>
+            </div>
+        </div>
+    </div>
+</div>
