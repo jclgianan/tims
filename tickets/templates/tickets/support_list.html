@@ -12,9 +12,9 @@
         <thead>
           <tr>
             <th width="1%">
-              <input type="checkbox" id="select-all">
+              <input type="checkbox" id="check-all">
             </th>
-            <th>Ticket ID</th>
+            <th>Customer</th>
             <th>Device ID</th>
             <th>Receiving Date</th>
             <th>Name</th>
@@ -30,11 +30,12 @@
         <tbody>
           {% for ticket in tickets %}
             <tr>
+              <td>
+                <input type="checkbox" name="selected_tickets" value="{{ ticket.id }}">
+              </td>
               <td>{{ ticket.id }}</td>
               <td>{{ ticket.supportticket.device_id }}</td>
-              <!--to be added-->
               <td>{{ ticket.receiving_date }}</td>
-              <!--to be added-->
               <td>{{ ticket.name }}</td>
               <td>{{ ticket.office_name }}</td>
               <td>{{ ticket.supportticket.item_name }}</td>
@@ -57,11 +58,26 @@
   <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
   <script>
     $(document).ready(function () {
-      $('#data-table-tickets').DataTable({
+      var table = $('#data-table-tickets').DataTable({
         responsive: true,
         pageLength: 10,
-        order: [[0, "desc"]] // Show newest ID first
+        columnDefs: [
+            {
+                targets: 0,
+                orderable: false,
+                searchable: false,
+                width: '10px'
+            }
+        ],
+        order: [[1, "desc"]]
       });
+
+      $('#check-all').on('click', function() {
+          var rows = table.rows({ 'search': 'applied' }).nodes();
+          $('input[type="checkbox"]', rows).prop('checked', this.checked);
+      });
+
+
     });
   </script>
 {% endblock %}

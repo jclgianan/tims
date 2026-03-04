@@ -8,13 +8,13 @@
     </div>
     <div class="panel-body">
       <table id="data-table-tickets"
-             class="table table-striped table-bordered align-middle">
+             class="table table-striped table-bordered align-middle nowrap"
+             style="width: 100%">
         <thead>
           <tr>
             <th width="1%">
-              <input type="checkbox" id="select-all">
+              <input type="checkbox" id="check-all">
             </th>
-            <th>ID</th>
             <th>Ticket ID</th>
             <th>Receiving Date</th>
             <th>Name</th>
@@ -32,7 +32,7 @@
           {% for ticket in tickets %}
             <tr>
               <td>
-                <input type="checkbox" class="ticket-checkbox" value="{{ ticket.id }}">
+                <input type="checkbox" name="selected_tickets" value="{{ ticket.id }}">
               </td>
               <td>{{ ticket.id }}</td>
               <td>{{ ticket.receiving_date }}</td>
@@ -53,34 +53,117 @@
       </table>
     </div>
   </div>
+  <div class="modal fade"
+       id="addTicketModal"
+       tabindex="-1"
+       aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create New Ticket</h5>
+          <button type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addTicketForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Name</label>
+                <input type="text"
+                       name="name"
+                       class="form-control"
+                       placeholder="Client Name"
+                       required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Office</label>
+                <input type="text"
+                       name="office_name"
+                       class="form-control"
+                       placeholder="Office Location">
+              </div>
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Title</label>
+                <input type="text"
+                       name="title"
+                       class="form-control"
+                       placeholder="Project Title">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Width (ft)</label>
+                <input type="number" step="0.1" name="width" class="form-control">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Height (ft)</label>
+                <input type="number" step="0.1" name="height" class="form-control">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" name="quantity" class="form-control" value="1">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Deadline</label>
+                <input type="date" name="deadline" class="form-control">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">File / Link</label>
+                <input type="text"
+                       name="file_link"
+                       class="form-control"
+                       placeholder="URL or Filename">
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save Ticket</button>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 {% block page_js %}
   <script src="{% static 'assets/plugins/datatables.net/js/jquery.dataTables.min.js' %}"></script>
   <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
+  <script src="{% static 'assets/plugins/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
+  <script src="{% static 'assets/plugins/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js' %}"></script>
+  <script src="{% static 'assets/plugins/datatables.net-buttons/js/dataTables.buttons.min.js' %}"></script>
+  <script src="{% static 'assets/plugins/datatables.net-buttons-bs5/js/buttons.bootstrap5.min.js' %}"></script>
   <script>
     $(document).ready(function () {
-      $('#data-table-tickets').DataTable({
+      var table = $('#data-table-tickets').DataTable({
         responsive: true,
-          pageLength: 10,
-        order: [[0, "desc"]] 
+        pageLength: 10,
+        dom: '<"row mb-3"<"col-md-6"B><"col-md-6 d-flex justify-content-end"<"me-3"l>f>>rtip',
+        buttons: [
+            {
+                text: '<i class="fa fa-plus fa-fw"></i> Add Ticket',
+                className: 'btn btn-primary btn-sm me-2 add-btn',
+                action: function (e, dt, node, config) {
+                  $("#addTicketModal").modal('show');
+                }
+            }
+        ],
+        columnDefs: [
+            {
+                targets: 0,
+                orderable: false,
+                searchable: false,
+                width: '10px'
+            }
+        ],
+        order: [[1, "desc"]]
+        
+      });
+
+      $('#check-all').on('click', function() {
+          var rows = table.rows({ 'search': 'applied' }).nodes();
+          $('input[type="checkbox"]', rows).prop('checked', this.checked);
       });
     });
-
-    $(document).ready(function () {
-    // Logic for "Select All" checkbox
-    $('#select-all').on('click', function () {
-        $('.ticket-checkbox').prop('checked', this.checked);
-    });
-
-    // Logic to handle individual clicks
-    $('.ticket-checkbox').on('change', function() {
-        if ($(this).is(':checked')) {
-            $(this).closest('tr').addClass('table-primary'); // Highlight selected row
-        } else {
-            $(this).closest('tr').removeClass('table-primary');
-            $('#select-all').prop('checked', false); // Uncheck "Select All" if one is unchecked
-        }
-    });
-});
   </script>
 {% endblock %}
