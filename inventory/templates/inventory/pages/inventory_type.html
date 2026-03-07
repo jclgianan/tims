@@ -191,8 +191,8 @@
         row.innerHTML = `
             <td><select name="part_id[]" class="form-select form-select-sm" required>${options}</select></td>
             <td class="text-center"><input type="checkbox" name="part_has_name_TEMP" class="form-check-input"></td>
-            <td class="text-center"><input type="checkbox" name="part_default_TEMP" class="form-check-input"></td>
             <td class="text-center"><input type="checkbox" name="part_serial_TEMP" class="form-check-input"></td>
+            <td class="text-center"><input type="checkbox" name="part_default_TEMP" class="form-check-input"></td>
             <td><button type="button" class="btn btn-link text-danger p-0" onclick="this.closest('tr').remove(); reIndexRows();"><i class="fas fa-trash"></i></button></td>
         `;
         tbody.appendChild(row);

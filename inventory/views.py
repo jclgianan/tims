@@ -116,6 +116,11 @@ def inventory_create(request):
                     type=main_type,
                     status=request.POST.get("status"),
                     condition=request.POST.get("condition"),
+                    issued_to=request.POST.get("issued_to"),
+                    office=request.POST.get("office"),
+                    date_acquired=request.POST.get("date_acquired") or None,
+                    date_issued=request.POST.get("date_issued") or None,
+                    notes=request.POST.get("notes", ""),
                 )
             )
             current_num += 1
@@ -171,13 +176,12 @@ def inventory_create(request):
                 children_to_create.append(
                     InventoryItem(
                         inventory_id=child_id,
-                        item_name=name_val
-                        or f"{child_type.name} for {parent.inventory_id}",
+                        item_name=name_val or f"{child_type.name} for {parent.inventory_id}",
                         type=child_type,
                         status="In Use",
                         condition=parent.condition,
                         parent=parent,
-                        notes=f"S/N: {sn_val}" if sn_val else "",
+                        notes="",
                     )
                 )
 

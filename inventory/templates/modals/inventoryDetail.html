@@ -1,34 +1,73 @@
+{% for item in items %}
 <div class="modal fade" id="viewItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-light">
-                <h5 class="modal-title">Item Details: {{ item.name }}</h5>
+                <h5 class="modal-title">Item Details: {{ item.item_name }} - {{ item.type }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item d-flex justify-content-between">
-                        <strong>ID:</strong> <span>#{{ item.id }}</span>
+                        <strong>Inventory ID:</strong> <span>{{ item.inventory_id }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
-                        <strong>Type:</strong> <span>{{ item.category }}</span>
+                        <strong>Type:</strong> <span>{{ item.type.name }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
-                        <strong>Stock Level:</strong> 
-                        <span class="badge {% if item.quantity < 5 %}bg-danger{% else %}bg-success{% endif %}">
-                            {{ item.quantity }}
+                        <strong>Status:</strong> 
+                        <span class="badge {% if item.status == 'Available' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ item.status }}
                         </span>
                     </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Condition:</strong> <span>{{ item.condition }}</span>
+                    </li>
+                    
+                    <li class="list-group-item d-flex justify-content-between">
+                        {% if item.parent %}
+                            <strong>Part of:</strong>
+                        {% elif item.sub_parts.all %}
+                            <strong>Contains:</strong>
+                        {% endif %}
+                        <span>
+                            {% if item.parent %}
+                                <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 fw-normal" style="font-size: 0.65rem;">
+                                    <i class="fas fa-link me-1"></i>{{ item.parent.inventory_id }}
+                                </span>
+                            {% elif item.sub_parts.all %}
+                                <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fw-normal" style="font-size: 0.65rem;">
+                                    <i class="fas fa-microchip me-1"></i>
+                                    {% for part in item.sub_parts.all %}
+                                        {{ part.inventory_id }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Issued to:</strong> <span>{{ item.issued_to }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Office:</strong> <span>{{ item.office }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Date Acquired:</strong> <span>{{ item.date_acquired|date:"M d, Y" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Date Issued:</strong> <span>{{ item.date_issued|date:"M d, Y" }}</span>
+                    </li>
                     <li class="list-group-item">
-                        <strong>Description:</strong>
-                        <p class="text-muted small mt-2">{{ item.description|default:"No description provided." }}</p>
+                        <strong>Notes:</strong>
+                        <p class="text-muted small mt-2">{{ item.notes|default:"No notes provided." }}</p>
                     </li>
                 </ul>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="" class="btn btn-primary">Edit Item</a>
+                <a href="#" class="btn btn-primary">Edit Item</a>
             </div>
         </div>
     </div>
 </div>
+{% endfor %}

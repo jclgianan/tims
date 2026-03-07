@@ -51,9 +51,9 @@
                             </span>
                         {% elif item.sub_parts.all %}
                             <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fw-normal" style="font-size: 0.65rem;">
-                                <i class="fas fa-microchip me-1"></i> Contains: 
+                                <i class="fas fa-link me-1"></i> Contains: 
                                 {% for part in item.sub_parts.all %}
-                                    {{ part.type.short_name }}{% if not forloop.last %}, {% endif %}
+                                    {{ part.inventory_id }}{% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                             </span>
                         {% endif %}
@@ -70,7 +70,7 @@
 
                 <td class="align-middle text-center">
                     <div class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewItemModal{{ item.id }}" title="View Item">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewItemModal{{ item.id }}">
                             <i class="fas fa-eye"></i>
                         </button>
                         
@@ -93,6 +93,8 @@
   {% include 'modals/inventoryDetail.html' %}
 
 {% endblock %} {% block page_js %}
+  <script src="{% static 'assets/js/vendor.min.js' %}"></script>
+  <script src="{% static 'assets/js/app.min.js' %}"></script>
   <script src="{% static 'assets/plugins/datatables.net/js/jquery.dataTables.min.js' %}"></script>
   <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
   <script src="{% static 'assets/plugins/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
@@ -211,5 +213,20 @@ function addComponentSlot(id, label, hasName, isSerial) {
         </div>`;
     $container.append(html);
 }
+    // AJAX for view modal
+    $('.view-details-btn').on('click', function() {
+        // Get data from the clicked button
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        const status = $(this).data('status');
+
+        // Inject data into the single modal
+        $('#modalItemName').text(name);
+        $('#modalItemStatus').text(status);
+
+        // Show the modal manually
+        const myModal = new bootstrap.Modal(document.getElementById('viewItemModal'));
+        myModal.show();
+    });
 </script>
 {% endblock %}

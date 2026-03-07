@@ -28,20 +28,10 @@ urlpatterns = [
     path("dashboard/filter/", views.dashboard, name="stat-cards-filter"),
     path("inventory/", views.inventory_list, name="inventory_list"),
     path("inventory-create/", views.inventory_create, name="inventory_create"),
-    path(
-        "generate-inventory-id/",
-        views.generate_inventory_id,
-        name="generate_inventory_id",
-    ),
+    path("generate-inventory-id/", views.generate_inventory_id, name="generate_inventory_id"),
     path("inventory-type/", views.create_inventory_type, name="inventory_type"),
-    path(
-        "inventory-type/<int:type_id>/",
-        views.create_inventory_type,
-        name="inventory_type_edit",
-    ),
+    path( "inventory-type/<int:type_id>/", views.create_inventory_type, name="inventory_type_edit"),
     path("get-type-specs/", views.get_type_specs, name="get_type_specs"),
-    path(
-        "inventory/<int:inventory_id>/", views.inventory_detail, name="inventory_detail"
-    ),
+    path("inventory/<int:inventory_id>/", views.inventory_detail, name="inventory_detail"),
     path("tickets/", include("tickets.urls")),
 ]
